@@ -36,6 +36,9 @@ public:
   bool GetHeartsBroken() {return hearts_broken_;}
 
   bool RandomlyDeal(int length=52);
+  bool RandomlyDeal(int *deck, int length=52);
+  bool RandomlyDeal(bool **allowed, int length=52);
+
   void AssignFirstLead();
 
   void AssignPonts();

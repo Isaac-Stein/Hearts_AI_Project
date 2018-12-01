@@ -44,6 +44,7 @@ unsigned char Player::AddToHand(unsigned char card) {
   for (int i=0; i<hand_size_; i++) {
     if (hand_[i] == 0) {
       hand_[i] = card;
+      controller_->SeeAddedToHand(card);
       return 0;
     }
   }
@@ -149,6 +150,10 @@ void Player::PrintHand() {
     std::cout << " ";
   }
   std::cout << std::endl;
+}
+
+void Player::PrintController() {
+  controller_->Print();
 }
 
 /**

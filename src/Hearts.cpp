@@ -241,6 +241,7 @@ void Hearts::TestAuxAct(unsigned long *total_scores) {
       for (i=0; i<players_.size(); i++) {
         if (i == high_index) {
           players_[i]->AddPoints(trick_score);
+
           players_[i]->SetLead(true);
         } else {
           players_[i]->SetLead(false);
@@ -255,8 +256,8 @@ void Hearts::TestAuxAct(unsigned long *total_scores) {
       for (int i=0;i<num_players_;i++) {
           //std::cout << "ponts of " << i << ": " << players_[i]->GetCurrentPoints()+0 << std::endl;
           total_scores[i] += players_[i]->GetCurrentPoints();
-          players_[i]->ClearCurrentPoints();
           players_[i]->ResetController();
+          players_[i]->ClearCurrentPoints();
       }
       game_state_ = TYPE_ROUND_START;
       round_over_ = true;
@@ -271,7 +272,7 @@ void Hearts::Test(int num_rounds) {
   unsigned long *total_scores = (unsigned long *)malloc(num_players_ * sizeof(unsigned long));
   double *average_scores = (double *)malloc(num_players_ * sizeof(double));
   double sum_averages = 0;
-  int report_period = 100000;
+  int report_period = 100;
   int num_periods = num_rounds/report_period;
   std::ofstream reportfile;
   reportfile.open("./report.csv");
@@ -289,9 +290,11 @@ void Hearts::Test(int num_rounds) {
     }
     for (int i=0; i<report_period; i++) {
       //printf("begin round %d\n",i);
+      srand(100);
       TestAuxAct(total_scores);
       //printf("end round %d\n",i);
     }
+    //players_[0]->PrintController();
     for (int i=0; i<num_players_; i++) {
       std::cout << "Player " << players_[i]->GetName() << " Total Score: " << total_scores[i] << std::endl;
       average_scores[i] = ((double)total_scores[i]/report_period);
@@ -326,7 +329,6 @@ Player *Hearts::GetLead() {
  * @brief Randomly deals out a deck to the players.
  *        It is assumed that the players_ is populated and able to accept all cards in a deck.
  *
- * @param The deck to deal.
  * @param The number of cards in the deck.
  *
  * @return A bool value of the success of the deal.
@@ -340,6 +342,50 @@ bool Hearts::RandomlyDeal(int length) {
   }
   return true;
 }
+
+/**
+ * @brief Randomly deals out a deck to the players.
+ *        The deck is to be ordered.
+ *        This is meant to deal out the remaining of a partially dealed deck.
+ *
+ * @param The deck to deal.
+ * @param The number of cards in the deck.
+ *
+ * @return A bool value of the success of the deal.
+ */
+bool Hearts::RandomlyDeal(int *deck, int length) {
+  for (unsigned char i=1; i<=length; i++) {
+    if (deck[i] == 0) continue;
+    while (players_[rand() % players_.size()]->AddToHand(deck[i]) == deck[i]);
+  }
+  return true;
+}
+
+/**
+ * @brief Randomly deals out a deck to the players.
+ *        The deck is to be ordered.
+ *        This is meant to deal out the remaining of a partially dealed deck
+ *        according to if a player is "allowed" to receive that card.
+ *
+ * @param The deck to deal.
+ * @param The number of cards in the deck.
+ *
+ * @return A bool value of the success of the deal.
+ */
+bool Hearts::RandomlyDeal(bool **allowed, int length) {
+  for (unsigned char i=1; i<=length; i++) {
+    // If no player can claim the card then it must be out of play.
+    if (allowed[0][i-1]==false && allowed[1][i-1]==false && allowed[2][i-1]==false && allowed[3][i-1]==false) continue;
+
+    int rand_player = rand() % players_.size();
+    while (allowed[rand_player][i-1] != false) { rand_player = rand() % players_.size(); }
+
+
+    players_[rand_player]->AddToHand(i) == i;
+  }
+  return true;
+}
+
 
 /**
  * @brief Cycles through every player and has them check if they lead the trick.

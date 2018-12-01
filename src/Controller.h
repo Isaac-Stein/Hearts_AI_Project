@@ -15,8 +15,10 @@ public:
   Controller() {}
   Controller(Player *player) {player_ = player;}
 
+  virtual void Print() {}
   virtual int Act() { return 0; }
   virtual void SeeLaid(unsigned char card) {}
+  virtual void SeeAddedToHand(unsigned char card) {}
   virtual void Reset() {}
 
 protected:

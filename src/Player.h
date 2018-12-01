@@ -31,6 +31,8 @@ bool HasFullHand() {
 
 void PrintHand();
 
+void PrintController();
+
 unsigned char AddToHand(unsigned char card);
 
 unsigned char PullCard(unsigned char index);

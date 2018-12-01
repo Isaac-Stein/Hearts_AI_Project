@@ -27,6 +27,10 @@ int MonteCarloComController::Act() {
   return player_->PullCard(max_index);
 }*/
 
+void MonteCarloComController::Print() {
+  tree_head_->Print();
+}
+
 int MonteCarloComController::Act() {
   int *hand = player_->GetHand();
   //player_->PrintHand();
@@ -56,6 +60,8 @@ int MonteCarloComController::Act() {
 }
 
 void MonteCarloComController::SeeLaid(unsigned char card) {
+  for(int i=0;i<4;i++) possible_cards_[i][card] = false;
+
   if (card == Q_SPADES) {
     queen_played_ = true;
     round_points_ += 13;
@@ -67,6 +73,10 @@ void MonteCarloComController::SeeLaid(unsigned char card) {
   }
 }
 
+void MonteCarloComController::SeeAddedToHand(unsigned char card) {
+  for(int i=0;i<4;i++) possible_cards_[i][card] = false;
+}
+
 void MonteCarloComController::Reset() {
   current_node_->AddSuccess(26-player_->GetCurrentPoints());
   current_node_->AddNotSuccess(player_->GetCurrentPoints());
@@ -74,4 +84,9 @@ void MonteCarloComController::Reset() {
   curr_turn_ = 0;
   round_points_ = 0;
   current_node_ = tree_head_;
+
+  // Reset the possible cards each player can recieve.
+  for (int i=0;i<4;i++) {
+    for (int j=0;j<52;j++) possible_cards_[i][j] = true;
+  }
 }

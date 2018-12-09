@@ -1,5 +1,6 @@
 bin/
 obj/
+output/
 Hearts.cbp
 Hearts.depend
 Hearts.layout

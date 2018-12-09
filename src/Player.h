@@ -30,6 +30,7 @@ bool HasFullHand() {
   }
 
 void PrintHand();
+void SetHand(int *hand);
 
 void PrintController();
 
@@ -47,6 +48,8 @@ bool HasNonHeart();
 bool HasNonPointCard();
 
 bool GetHeartsBroken();
+
+Controller *GetController() { return controller_; }
 
 bool IsLead() { return leads_; }
 void SetLead(bool lead) { leads_ = lead; }

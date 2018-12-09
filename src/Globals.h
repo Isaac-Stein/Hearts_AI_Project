@@ -8,6 +8,13 @@ static bool SameSuit() {
 
 }
 
+enum MoonType{
+  TYPE_OLD_MOON,
+  TYPE_NEW_MOON,
+  TYPE_NONE
+};
+
+
 enum HeartsSimulationState{
   NORMAL,
   SINGLE_ROUND

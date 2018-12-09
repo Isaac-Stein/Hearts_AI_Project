@@ -83,6 +83,56 @@ void MonteCarloNode::Reweigh() {
   }
 }
 
+void MonteCarloNode::ReweighTree() {
+  if (total_ == 0) return;
+  if (parent_ != NULL) {
+    weight_ = ((double)success_/total_) + sqrt((2 * log(parent_->GetTotal()))/total_);
+  }
+  for (int i=0;i<children_.size();i++) children_[i]->ReweighTree();
+}
+
+/**
+ * @brief Merges the contents of another MCT into this MCT.
+ *        The merged tree will need to be reweighed.
+ *
+ * @param A pointer to the other MTC.
+ */
+void MonteCarloNode::Merge(MonteCarloNode *other) {
+  // Merging the success, totals of the current node.
+  success_ += other->GetSuccess();
+  total_ += other->GetTotal();
+
+  // Merges every child of the MCT.
+  std::vector<MonteCarloNode *> other_children = other->GetChildren();
+  int num_children = children_.size();
+  int num_other_children = other_children.size();
+  bool share_child;
+
+  for (int j=0; j<num_other_children; j++) {
+    share_child = false;
+    for (int i=0; i<num_children; i++) {
+      // Both trees branch to the same child id, merge the two.
+      if (children_[i]->GetId() == other_children[j]->GetId()) {
+        children_[i]->Merge(other_children[j]);
+        share_child = true;
+      }
+    }
+    // If the id of the other child is not in this tree, add it, then merge the two.
+    if (!share_child) {
+      children_.push_back(new MonteCarloNode(other_children[j]->GetId(), this));
+        children_[children_.size()-1]->Merge(other_children[j]);
+    }
+  }
+}
+
+void MonteCarloNode::Delete() {
+  int num_child = children_.size();
+  for (int i=0;i<num_child;i++) {
+    children_[i]->Delete();
+    delete children_[i];
+  }
+}
+
 void MonteCarloNode::Print(int num_spaces) {
   for (int i=0;i<num_spaces;i++)std::cout << " ";
   std::cout << id_ << ": (" << success_ <<"/"<<total_<<") : ";

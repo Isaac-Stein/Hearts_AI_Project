@@ -26,7 +26,7 @@ void Hearts::Setup(std::vector<Player *> new_players) {
 /**
  * @brief Assigns to points gained so far in the tricks to each of the players.
  */
-void Hearts::AssignPonts() {
+void Hearts::AssignPoints() {
   for (int i=0; i < players_.size(); i++) {
     // Rules for point distributions when the moon has been shot.
     if (players_[i]->GetCurrentPoints() == 26) {
@@ -67,6 +67,46 @@ void Hearts::AssignPonts() {
     }
   }
 }
+
+/**
+ * @brief Adjusts the points according to the moon rules.
+ */
+void Hearts::AdjustPoints() {
+  for (int i=0; i < players_.size(); i++) {
+    // Rules for point distributions when the moon has been shot.
+    if (players_[i]->GetCurrentPoints() == 26) {
+      //for (int k=0;k<4;k++) printf("%d\n",players_[k]->GetCurrentPoints());
+      for (int j=0; j<players_.size(); j++) {
+        if (j!=i) {
+          switch(moon_type_){
+            case(TYPE_OLD_MOON): {
+              players_[j]->AddPoints(26);
+              break;
+            }
+            case(TYPE_NEW_MOON):{}
+            default:{
+            }
+          }
+        } else {
+          switch(moon_type_){
+            case(TYPE_OLD_MOON): {
+              players_[j]->AddPoints(-26);
+              break;
+            }
+            case(TYPE_NEW_MOON):{
+              players_[j]->AddPoints(-52);
+              break;
+            }
+            default:{
+            }
+          }
+        }
+      }
+      return;
+    }
+  }
+}
+
 
 /**
  * @brief The game of Hearts undertakes the next action in a game.
@@ -171,7 +211,7 @@ void Hearts::Act() {
     break;
     }
     case(TYPE_ROUND_RESOLUTION) : {
-      if (sim_state_ == NORMAL) AssignPonts();
+      if (sim_state_ == NORMAL) AssignPoints();
       for (int p=0;p<players_.size();p++) players_[p]->ResetController();
       game_state_ = TYPE_ROUND_START;
       break;
@@ -179,6 +219,32 @@ void Hearts::Act() {
     default: { printf("This should not appear in Hears::Act\n"); }
     }
   }
+}
+
+/**
+ * @brief Continues a game based off of player information.
+ *
+ **/
+void Hearts::SetupToContinueRound() {
+  is_first_trick_ = true;
+  hearts_broken_ = false;
+  tricks_played_ = 0;
+  int *sample_hand = players_[0]->GetHand();
+
+  // Find if this is the first hand or not.
+  for (int i=0;i<13;i++) {
+    if (sample_hand[i] == 0) {
+      is_first_trick_ = false;
+      tricks_played_++;
+    }
+  }
+  if (is_first_trick_) AssignFirstLead();
+  for (int i=0;i<players_.size(); i++) {
+    if (players_[i]->GetTotalPoints() > 0) hearts_broken_ = true;
+  }
+
+  if (tricks_played_ == 13) game_state_ = TYPE_ROUND_RESOLUTION;
+  else game_state_ = TYPE_ROUND_MIDDLE;
 }
 
 /**
@@ -253,9 +319,10 @@ void Hearts::TestAuxAct(unsigned long *total_scores) {
     break;
     }
     case(TYPE_ROUND_RESOLUTION) : {
+      AdjustPoints();
       for (int i=0;i<num_players_;i++) {
           //std::cout << "ponts of " << i << ": " << players_[i]->GetCurrentPoints()+0 << std::endl;
-          total_scores[i] += players_[i]->GetCurrentPoints();
+          if (total_scores != NULL) total_scores[i] += players_[i]->GetCurrentPoints();
           players_[i]->ResetController();
           players_[i]->ClearCurrentPoints();
       }
@@ -270,9 +337,10 @@ void Hearts::TestAuxAct(unsigned long *total_scores) {
 
 void Hearts::Test(int num_rounds) {
   unsigned long *total_scores = (unsigned long *)malloc(num_players_ * sizeof(unsigned long));
+  unsigned long *round_scores = (unsigned long *)malloc(num_players_ * sizeof(unsigned long));
   double *average_scores = (double *)malloc(num_players_ * sizeof(double));
   double sum_averages = 0;
-  int report_period = 100;
+  int report_period = 1;
   int num_periods = num_rounds/report_period;
   std::ofstream reportfile;
   reportfile.open("./report.csv");
@@ -282,23 +350,47 @@ void Hearts::Test(int num_rounds) {
     else reportfile << ", ";
   }
 
+  /*
+  RandomlyDeal();
+  int *alphabet = (int *)malloc(52*sizeof(int));
+  for (int i=0;i<52;i++) alphabet[i]=(i+1);
+  int *destroyed_hand = players_[0]->GetHand();
+  int *hand = (int *)malloc(13 * sizeof(int));
+  for (int i=0;i<13; i++) hand[i] = destroyed_hand[i];
+  for (int i=0;i<13;i++) alphabet[hand[i]-1] = 0;
+
+  for (int i=0; i<players_.size(); i++) {
+    std::cout << players_[i]->GetName() << ": ";
+    players_[i]->PrintHand();
+  }
+  */
+
+  for (int i=0;i<4;i++)total_scores[i] = 0;
   for (int p=0;p<num_periods; p++) {
     printf("Begin period %d\n",p);
     for (int i=0; i<num_players_; i++) {
-        total_scores[i] = 0;
-        players_[i]->Reset();
+      players_[i]->Reset();
+      round_scores[i] = 0;
     }
+
+
+
     for (int i=0; i<report_period; i++) {
       //printf("begin round %d\n",i);
-      srand(100);
-      TestAuxAct(total_scores);
+      /*
+      for (int p=1;p<4;p++)players_[p]->Reset();
+      players_[0]->SetHand(hand);
+      RandomlyDeal(alphabet);
+      SetupToContinueRound();
+      */
+      TestAuxAct(round_scores);
       //printf("end round %d\n",i);
     }
     //players_[0]->PrintController();
     for (int i=0; i<num_players_; i++) {
-      std::cout << "Player " << players_[i]->GetName() << " Total Score: " << total_scores[i] << std::endl;
-      average_scores[i] = ((double)total_scores[i]/report_period);
-      reportfile << ((double)total_scores[i]/report_period);
+      std::cout << "Player " << players_[i]->GetName() << " Round Score: " << round_scores[i] << std::endl;
+      average_scores[i] = ((double)round_scores[i]/report_period);
+      reportfile << ((double)round_scores[i]/report_period);
       if (i==num_players_-1) reportfile << "\n";
       else reportfile << ", ";
       sum_averages += average_scores[i];
@@ -307,8 +399,23 @@ void Hearts::Test(int num_rounds) {
       std::cout << "Player " << players_[i]->GetName() << " Average Score: " << average_scores[i] << std::endl;
     }
     printf("Total of average scores = %lf\n\n",sum_averages);
+    for (int i=0;i<4;i++) total_scores[i] += round_scores[i];
+  }
+  for (int i=0; i<num_players_; i++) {
+    //std::cout << "Player " << players_[i]->GetName() << " Total Score: " << round_scores[i] << std::endl;
+    reportfile << ((double)total_scores[i]);
+    if (i==num_players_-1) reportfile << "\n";
+    else reportfile << ", ";
   }
   reportfile.close();
+}
+
+void Hearts::Simulate(int num_rounds, bool **possible_cards) {
+  for (int i=0; i<num_rounds; i++) {
+    RandomlyDeal(possible_cards);
+    SetupToContinueRound();
+    TestAuxAct();
+  }
 }
 
 /**
@@ -354,7 +461,7 @@ bool Hearts::RandomlyDeal(int length) {
  * @return A bool value of the success of the deal.
  */
 bool Hearts::RandomlyDeal(int *deck, int length) {
-  for (unsigned char i=1; i<=length; i++) {
+  for (unsigned char i=0; i<=length; i++) {
     if (deck[i] == 0) continue;
     while (players_[rand() % players_.size()]->AddToHand(deck[i]) == deck[i]);
   }
@@ -378,7 +485,7 @@ bool Hearts::RandomlyDeal(bool **allowed, int length) {
     if (allowed[0][i-1]==false && allowed[1][i-1]==false && allowed[2][i-1]==false && allowed[3][i-1]==false) continue;
 
     int rand_player = rand() % players_.size();
-    while (allowed[rand_player][i-1] != false) { rand_player = rand() % players_.size(); }
+    while (allowed[rand_player][i-1] == false) { rand_player = rand() % players_.size(); }
 
 
     players_[rand_player]->AddToHand(i) == i;

@@ -1,14 +1,13 @@
-#ifndef _MONTE_CARLO_CONTROLLER_
-  #define _MONTE_CARLO_CONTROLLER_
+#ifndef _ROUND_BASED_SIMULATED_CONTROLLER_
+  #define _ROUND_BASED_SIMULATED_CONTROLLER_
 
 #include "Controller.h"
 #include "MonteCarloNode.h"
-#include "RoundBasedSimulatedController.h"
-#include "GreedyComController.h"
+#include "Hearts.h"
 
-class MonteCarloComController : public Controller {
+class RoundBasedSimulatedComController : public Controller {
   public:
-    MonteCarloComController() : Controller() {
+    RoundBasedSimulatedComController() : Controller() {
       tree_head_ = new MonteCarloNode();
       current_node_ = tree_head_;
       possible_cards_ = (bool **)malloc(4 * sizeof(bool *));
@@ -17,18 +16,19 @@ class MonteCarloComController : public Controller {
           for (int j=0;j<52;j++) possible_cards_[i][j] = true;
       }
     }
-    //MonteCarloController(Player *player) {Controller(player);}
+    //RoundBasedSimulatedController(Player *player) {Controller(player);}
     int Act() override;
-    void SimulateGame();
     void SeeLaid(unsigned char card) override;
     void SeeAddedToHand(unsigned char card) override;
     void Reset() override;
     void ResetTree();
 
+
+    MonteCarloNode *GetTreeHead() { return tree_head_; }
+
     void Print() override;
 
   private:
-    int *full_hand_;
     unsigned char curr_turn_{0};
     unsigned char curr_trick_{0};
     int round_points_{0};
@@ -36,7 +36,7 @@ class MonteCarloComController : public Controller {
     MonteCarloNode *tree_head_{NULL};
     MonteCarloNode *current_node_{NULL};
     bool **possible_cards_{NULL};
-    bool ran_simulation_{false};
 };
-#endif // _MONTE_CARLO_CONTROLLER_
+#endif // _ROUND_BASED_SIMULATED_CONTROLLER_
+
 

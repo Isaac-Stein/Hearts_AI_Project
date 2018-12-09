@@ -12,18 +12,15 @@ enum GameStates{
   TYPE_ROUND_RESOLUTION
 };
 
-enum MoonType{
-  TYPE_OLD_MOON,
-  TYPE_NEW_MOON
-};
-
 class Player;
 
 class Hearts {
 public:
 
   void Test(int num_rounds);
-  void TestAuxAct(unsigned long *total_scores);
+  void Simulate(int num_rounds, bool **possible_cards);
+  void TestAuxAct(unsigned long *total_scores = NULL);
+  void SetupToContinueRound();
 
   void Setup();
   void Setup(std::vector<Player *> new_players);
@@ -41,9 +38,11 @@ public:
 
   void AssignFirstLead();
 
-  void AssignPonts();
+  void AssignPoints();
+  void AdjustPoints();
 
   void SetState(HeartsSimulationState state) { sim_state_ = state; }
+  void SetMoonType(MoonType type) {moon_type_ = type;}
 
   bool IsValidPlay(int card, Player *player);
 

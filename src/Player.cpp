@@ -52,6 +52,12 @@ unsigned char Player::AddToHand(unsigned char card) {
   return card;
 }
 
+void Player::SetHand(int *hand) {
+  for (int i=0;i<hand_size_;i++) {
+    hand_[i] = hand[i];
+  }
+}
+
 /**
  * @brief Pulls a card from the players hand at some index, leaves 0 at that index.
  *

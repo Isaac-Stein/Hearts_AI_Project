@@ -18,11 +18,17 @@ public:
   unsigned long GetTotal();
   double GetWeight();
   int GetId();
+  std::vector<MonteCarloNode *> GetChildren() { return children_; }
   double GetChildWeight(int id);
   MonteCarloNode *GetChild(int id);
   MonteCarloNode *GetMaxChild();
 
+  void Merge(MonteCarloNode *other);
+
   void Print(int num_spaces=0);
+  void Delete();
+
+  void ReweighTree();
 
 private:
   void Reweigh();
